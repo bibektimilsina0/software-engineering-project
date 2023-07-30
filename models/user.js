@@ -30,6 +30,18 @@ const userSchema = new mongoose.Schema({
         enum:['user','admin'],
         default:'user',
     },
+    verified: {
+        type: Boolean,
+        default: false
+    },
+    country:{
+        type:String,
+        required:[true,'provided country name']
+    },
+    address:{
+        type:String,
+        required:[true,'provide your address']
+    },
     passwordChangedAt:Date,
     forgotpassToken:String,
     forgotTokenExpires:Date,

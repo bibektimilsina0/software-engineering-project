@@ -51,5 +51,6 @@ const campaignSchema=new mongoose.Schema({
         enum:['Pending','Approved'],
         default:'Pending',
     }
+   
 })
 module.exports=mongoose.model('Campaign',campaignSchema)

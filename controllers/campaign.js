@@ -1,11 +1,36 @@
 const User=require('../models/user')
-const { BadRequestError ,NotFoundError} = require('../errors')
+const {UnauthenticatedError, BadRequestError ,NotFoundError} = require('../errors')
 const Campaign=require('../models/campaign')
+const Credential=require('../models/campaignCredential')
 const {StatusCodes}=require('http-status-codes')
 const fs=require('fs')
+const path=require('path')
 const getAllCampaign=async(req,res)=>{
-    const campaigns=await Campaign.find({status:'Approved'})
-    res.status(StatusCodes.OK).json({campaigns,count:campaigns.length})
+    // const{searchbyname,creator,progress,category,sort}=req.query;
+    let result=await Campaign.find({status:'Approved'})
+    // let queryObject={};
+    // if(searchbyname){
+    //     queryObject.name={$regex:searchbyname,$options:'i'}
+    // }
+    // if(creator){
+    //     queryObject.creatorName={$regex:searchbyname,$options:'i'}
+    // }
+    // if(category){
+    //     queryObject.category=category
+    // }
+    // if(progress){
+    //     queryObject.progress=progress
+    // }
+    // result=await Campaign.find({queryObject})
+
+    // if (sort) {
+    //     const sortList = sort.split(',').join(' ');
+    //     result = result.sort(sortList);
+    //   } else {
+    //     result = result.sort('createdAt');
+    //   }
+    const fileredcampaign=await result;
+    res.status(StatusCodes.OK).json({fileredcampaign,count:fileredcampaign.length})
 }
 const getCampaign=async(req,res)=>{
     const {params:{id:campaignId}}=req
@@ -19,7 +44,11 @@ const getCampaign=async(req,res)=>{
 }
 const createCampaign=async(req,res)=>{
     req.body.createdBy=req.user.userId;
+
  const user=await User.findOne({_id:req.body.createdBy})
+ if(!user.verified){
+    throw new UnauthenticatedError('You must verify your email to create campaign')
+ }
  const creatorName=user.name;
  const fundsNeeded=req.body.goal;
  const fundsRaised=0;
@@ -35,11 +64,13 @@ const createCampaign=async(req,res)=>{
   if (productImage.size > maxSize) {
     throw new BadRequestError('Please upload image smaller 3MB');
   }
+  
     const campaign= await Campaign.create({...req.body,creatorName:creatorName,fundsNeeded:fundsNeeded,fundsRaised:fundsRaised ,   img: {
-        data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
+        data: fs.readFileSync(path.join(__dirname ,'../'+ '/uploads/' + req.file.filename)),
         contentType:req.file.mimetype
     }})
-    res.status(StatusCodes.OK).json({campaign})
+    const postCrediential=`${req.protocol}://${req.get('host')}/api/v1/campaign/${campaign._id}/credentials`;
+    res.status(StatusCodes.OK).json({campaign:campaign,message:`You need further verification to approve Campaign.To complete the verification process, simply click on the link below:\n\n ${postCrediential}`})
 }
 
 const deleteCampaign=async(req,res)=>{
@@ -69,6 +100,32 @@ const updateCampaign=async(req,res)=>{
     res.status(StatusCodes.OK).json({campaign})
 
 }
+const credential=async(req,res)=>{
+    const{Name,DOB,Age,documentType}=req.body;
+    req.body.CampaignId =req.params.id
+    console.log(req.files)
+    console.log( req.body.CampaignId);
+ 
+    const campaigncredential=await Credential.create(
+       { Name:Name,
+        DOB:DOB,
+        Age:Age,
+        documentType:documentType,
+        CampaignId:req.body.CampaignId
+        }
+    ) 
+   req.files.forEach((file)=>{
+    campaigncredential.document.push({
+        data: fs.readFileSync(path.join(__dirname ,'../'+ `/credentials/${req.body.CampaignId}/` + file.filename)),
+        contentType:file.mimetype
+    })
+   })
+   campaigncredential.save()
+
+    res.status(StatusCodes.CREATED).json({credential:campaigncredential})  
+  
+
+}
 module.exports={
-    getAllCampaign,getCampaign,createCampaign,updateCampaign,deleteCampaign
+    getAllCampaign,getCampaign,createCampaign,updateCampaign,deleteCampaign,credential
 }
