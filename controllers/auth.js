@@ -138,6 +138,7 @@ const verifyEmail = async (req, res, next) => {
             })
         }
         if (user.expiresAt < Date.now()) {
+            await VerifyToken.findOneAndDelete({ userId: id })
             return res.status(404).json({
                 message: 'Link Expired'
             })

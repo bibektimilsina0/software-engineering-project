@@ -33,6 +33,10 @@ const campaignSchema=new mongoose.Schema({
         type:Number,
         required:true
     },
+    expiresAt:{
+        type:Date,
+        required:true
+    },
     createdBy: {
         type: mongoose.Types.ObjectId,
         ref: 'user',
@@ -52,5 +56,5 @@ const campaignSchema=new mongoose.Schema({
         default:'Pending',
     }
    
-})
+},{ timestamps: true,})
 module.exports=mongoose.model('Campaign',campaignSchema)

@@ -6,30 +6,33 @@ const {StatusCodes}=require('http-status-codes')
 const fs=require('fs')
 const path=require('path')
 const getAllCampaign=async(req,res)=>{
-    // const{searchbyname,creator,progress,category,sort}=req.query;
-    let result=await Campaign.find({status:'Approved'})
-    // let queryObject={};
-    // if(searchbyname){
-    //     queryObject.name={$regex:searchbyname,$options:'i'}
-    // }
-    // if(creator){
-    //     queryObject.creatorName={$regex:searchbyname,$options:'i'}
-    // }
-    // if(category){
-    //     queryObject.category=category
-    // }
-    // if(progress){
-    //     queryObject.progress=progress
-    // }
-    // result=await Campaign.find({queryObject})
+    const{name,creator,progress,category,sort}=req.query;
+    // let result=await Campaign.find({status:'Approved'})
+    let queryObject={status:'Approved'};
+    const validCategories=['Child','Girls','Animal','Envirnoment','Disability','Patient','Education']
+    if(name){
+        queryObject.title={$regex:name,$options:'i'}
+    }
+    if(creator){
+        queryObject.creatorName={$regex:creator,$options:'i'}
+    }
+    if(category&&validCategories.includes(category)){
+        queryObject.category=category
+    }
+    if(progress){
+        queryObject.progress=progress
+    }
+    console.log(queryObject);
+   let result=await Campaign.find(queryObject)
 
     // if (sort) {
     //     const sortList = sort.split(',').join(' ');
-    //     result = result.sort(sortList);
+    //     result = result.sort({sortList});
     //   } else {
-    //     result = result.sort('createdAt');
+    //     result = result.sort({ createdAt: 1 });
     //   }
     const fileredcampaign=await result;
+    
     res.status(StatusCodes.OK).json({fileredcampaign,count:fileredcampaign.length})
 }
 const getCampaign=async(req,res)=>{
@@ -49,6 +52,8 @@ const createCampaign=async(req,res)=>{
  if(!user.verified){
     throw new UnauthenticatedError('You must verify your email to create campaign')
  }
+ const expiresAt=Date.now()+86400000*req.body.FundraisingPeriod;
+ console.log(expiresAt)
  const creatorName=user.name;
  const fundsNeeded=req.body.goal;
  const fundsRaised=0;
@@ -60,12 +65,12 @@ const createCampaign=async(req,res)=>{
   if (!productImage.mimetype.startsWith('image')) {
     throw new BadRequestError('Please Upload Image');
   }
-  const maxSize = 3*1024 * 1024;
+  const maxSize = 500*1024;
   if (productImage.size > maxSize) {
-    throw new BadRequestError('Please upload image smaller 3MB');
+    throw new BadRequestError('Please upload image smaller 500kb');
   }
   
-    const campaign= await Campaign.create({...req.body,creatorName:creatorName,fundsNeeded:fundsNeeded,fundsRaised:fundsRaised ,   img: {
+    const campaign= await Campaign.create({...req.body,creatorName:creatorName,fundsNeeded:fundsNeeded,fundsRaised:fundsRaised ,expiresAt,   img: {
         data: fs.readFileSync(path.join(__dirname ,'../'+ '/uploads/' + req.file.filename)),
         contentType:req.file.mimetype
     }})
@@ -115,6 +120,12 @@ const credential=async(req,res)=>{
         }
     ) 
    req.files.forEach((file)=>{
+    if (!file.mimetype.startsWith('image')) {
+        throw new BadRequestError('Please Upload Image');
+      }
+    if(file.size>=200*1024){
+        throw new BadRequestError('Please upload image smaller 200kb');
+    }
     campaigncredential.document.push({
         data: fs.readFileSync(path.join(__dirname ,'../'+ `/credentials/${req.body.CampaignId}/` + file.filename)),
         contentType:file.mimetype
