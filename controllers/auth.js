@@ -5,11 +5,16 @@ const VerifyToken=require('../models/tokenSchema')
 const {StatusCodes}=require('http-status-codes')
 const {BadRequestError, UnauthenticatedError,NotFoundError}=require('../errors')
 const register=async(req,res)=>{
-     const {password,confirmPassword}=req.body
+     const {password,confirmPassword,role}=req.body
 
      if(!(password===confirmPassword)){
       return  res.status(400).json('password and confirmPassword must be same')
      } 
+     if(role){
+        if(role==="admin"){
+            throw new BadRequestError("you can not register as admin")
+        }
+     }
         const user=await User.create({...req.body})
         const token=await user.createJWT()
 

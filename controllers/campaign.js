@@ -22,7 +22,6 @@ const getAllCampaign=async(req,res)=>{
     if(progress){
         queryObject.progress=progress
     }
-    console.log(queryObject);
    let result=await Campaign.find(queryObject)
 
     // if (sort) {
@@ -31,9 +30,15 @@ const getAllCampaign=async(req,res)=>{
     //   } else {
     //     result = result.sort({ createdAt: 1 });
     //   }
-    const fileredcampaign=await result;
-    
-    res.status(StatusCodes.OK).json({fileredcampaign,count:fileredcampaign.length})
+    // const filteredcampaign=await result;
+    const filteredCampaign = await Promise.all(result.map(async campaign => {
+        const base64String = campaign.img.data.toString('base64');
+        return {
+          ...campaign.toObject(), // Include all existing properties
+          img: base64String, // Modify the img property
+        };
+      }));
+    res.status(StatusCodes.OK).json({filteredCampaign,count:filteredCampaign.length})
 }
 const getCampaign=async(req,res)=>{
     const {params:{id:campaignId}}=req
@@ -123,8 +128,8 @@ const credential=async(req,res)=>{
     if (!file.mimetype.startsWith('image')) {
         throw new BadRequestError('Please Upload Image');
       }
-    if(file.size>=200*1024){
-        throw new BadRequestError('Please upload image smaller 200kb');
+    if(file.size>=100*1024){
+        throw new BadRequestError('Please upload image smaller 100kb');
     }
     campaigncredential.document.push({
         data: fs.readFileSync(path.join(__dirname ,'../'+ `/credentials/${req.body.CampaignId}/` + file.filename)),
