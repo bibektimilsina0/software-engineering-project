@@ -47,16 +47,24 @@ const register=async(req,res)=>{
           <b><p>Best regards,<br>The Crowd Funding Services Team</p></b>
         </body>
         </html>`
-        
-            await sendEmail({
+        new Promise((resolve,reject)=>{
+             sendEmail({
                 email:user.email,
                 message:message,
                 subject:'Email Verification'
-               })
-                res.status(200).json({
-                    status:'success',
-                    message:'verification link sent successfully'
-                })
+               },function(error,response){
+                if (error) {
+                    reject(error)
+                } else {
+                    resolve("email sent")
+                }
+            })
+        })
+           
+            //     res.status(200).json({
+            //         status:'success',
+            //         message:'verification link sent successfully'
+            //     })
           
        res.status(StatusCodes.CREATED).json({user:{name:user.name},token})  
     } catch (error) {
