@@ -3,10 +3,13 @@ const User=require('../models/user')
 const crypto=require('crypto')
 const VerifyToken=require('../models/tokenSchema')
 const {StatusCodes}=require('http-status-codes')
+const emailValidator = require('email-validator');
+const EmailVerifier = require('email-verifier');
+
 const {BadRequestError, UnauthenticatedError,NotFoundError}=require('../errors')
 const register=async(req,res)=>{
-     const {password,confirmPassword,role}=req.body
-
+     const {email,password,confirmPassword,role}=req.body
+ 
      if(!(password===confirmPassword)){
       return  res.status(400).json('password and confirmPassword must be same')
      } 
@@ -15,6 +18,7 @@ const register=async(req,res)=>{
             throw new BadRequestError("you can not register as admin")
         }
      }
+     try{
         const user=await User.create({...req.body})
         const token=await user.createJWT()
 
@@ -43,7 +47,7 @@ const register=async(req,res)=>{
           <b><p>Best regards,<br>The Crowd Funding Services Team</p></b>
         </body>
         </html>`
-        try {
+        
             await sendEmail({
                 email:user.email,
                 message:message,
@@ -53,13 +57,13 @@ const register=async(req,res)=>{
                     status:'success',
                     message:'verification link sent successfully'
                 })
-           } catch (error) {
-            
-             user.save({ValidateBeforeSave:false})
-             return new NotFoundError('There was a error sending password reset email.');
-           }
+          
        res.status(StatusCodes.CREATED).json({user:{name:user.name},token})  
-    
+    } catch (error) {
+            
+        // user.save({ValidateBeforeSave:false})
+        return new NotFoundError('There was a error sending password reset email.');
+      }
     
 }
 const login=async(req,res)=>{
