@@ -7,5 +7,5 @@ router.route('/login').post(login)
 router.route('/forgotpassword').post(forgotPassword)
 router.route('/resetpassword/:token').patch(resetPassword)
 router.route('/verify/:id/:token').get(verifyEmail)
-router.route('/autodeletetoken').get( token_delete)
+// router.route('/autodeletetoken').get( token_delete)
 module.exports=router;
