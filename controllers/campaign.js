@@ -5,6 +5,8 @@ const Credential=require('../models/campaignCredential')
 const {StatusCodes}=require('http-status-codes')
 const fs=require('fs')
 const path=require('path')
+// const {uploadToS3}=require('../props/awsupload')
+// const {getFromS3}=require('../props/awsupload')
 const getAllCampaign=async(req,res)=>{
     const{name,creator,progress,category,sort}=req.query;
     // let result=await Campaign.find({status:'Approved'})
@@ -76,7 +78,7 @@ const createCampaign=async(req,res)=>{
   }
   
     const campaign= await Campaign.create({...req.body,creatorName:creatorName,fundsNeeded:fundsNeeded,fundsRaised:fundsRaised ,expiresAt,   img: {
-        data: fs.readFileSync(path.join(__dirname ,'../'+ '/uploads/' + req.file.filename)),
+        data:req.file.buffer,
         contentType:req.file.mimetype
     }})
     const postCrediential=`${req.protocol}://${req.get('host')}/api/v1/campaign/${campaign._id}/credentials`;
