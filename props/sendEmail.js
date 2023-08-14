@@ -23,6 +23,8 @@ const sendEmail=(options)=>{
     }
     try {
         transporter.sendMail(emailOptions)
+        console.log(process.env.EMAIL)
+        console.log(process.env.PASSWORD)
         resolve('email sent')
     } catch (error) {
         console.log(error)
