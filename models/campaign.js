@@ -21,7 +21,7 @@ const campaignSchema=new mongoose.Schema({
     },
     category:{
         type:String,
-        enum:['Child','Girls','Animal','Environment','Disability','Patient','Education'],
+        enum:['Child','Women&Girls','Animal','Environment','Food&Hunger','Medical','Education'],
         required:true
     },
     progress:{
