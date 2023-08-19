@@ -166,11 +166,12 @@ const credential=async(req,res)=>{
         if(file.size>=100*1024){
             throw new BadRequestError('Please upload image smaller 100kb');
         }
-      const newImage = new Image({
+      const newImage ={
         data: file.buffer,
         contentType: file.mimetype
-      });
-      campaigncredential.document.push(await newImage.save());
+      };
+    //   images.push(newImage)
+      campaigncredential.document.push(await newImage);
     }
    campaigncredential.save()
 
