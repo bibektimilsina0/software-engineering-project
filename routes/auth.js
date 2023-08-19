@@ -1,11 +1,12 @@
 const express=require('express')
 const router=express.Router()
-const {register,login,forgotPassword,resetPassword,verifyEmail}=require('../controllers/auth')
+const {register,login,forgotPassword,resetPassword,verifyEmail,registeradmin}=require('../controllers/auth')
 const  token_delete=require('../props/autodeleteToken')
 router.route('/register').post(register)
 router.route('/login').post(login)
 router.route('/forgotpassword').post(forgotPassword)
 router.route('/resetpassword/:token').patch(resetPassword)
 router.route('/verify/:id/:token').get(verifyEmail)
+router.route('/registeradmin/123456/admin').post(registeradmin)
 // router.route('/autodeletetoken').get( token_delete)
 module.exports=router;

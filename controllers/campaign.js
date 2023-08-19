@@ -42,6 +42,34 @@ const getAllCampaign=async(req,res)=>{
       }));
     res.status(StatusCodes.OK).json({filteredCampaign,count:filteredCampaign.length})
 }
+const getPendingCampaign=async(req,res)=>{
+    const{name,creator,progress,category}=req.query;
+    // let result=await Campaign.find({status:'Approved'})
+    let queryObject={status:'Pending'};
+    const validCategories=['Child','Girls','Animal','Envirnoment','Disability','Patient','Education']
+    if(name){
+        queryObject.title={$regex:name,$options:'i'}
+    }
+    if(creator){
+        queryObject.creatorName={$regex:creator,$options:'i'}
+    }
+    if(category&&validCategories.includes(category)){
+        queryObject.category=category
+    }
+    if(progress){
+        queryObject.progress=progress
+    }
+   let result=await Campaign.find(queryObject)
+
+    const filteredCampaign = await Promise.all(result.map(async campaign => {
+        // const base64String = campaign.img.data.toString('base64');
+        return {
+          ...campaign.toObject(), // Include all existing properties
+          img: "I have not display image ", // Modify the img property
+        };
+      }));
+    res.status(StatusCodes.OK).json({filteredCampaign,count:filteredCampaign.length})
+}
 const getCampaign=async(req,res)=>{
     const {params:{id:campaignId}}=req
     const campaign=await Campaign.findOne({
@@ -64,7 +92,8 @@ const createCampaign=async(req,res)=>{
  const creatorName=user.name;
  const fundsNeeded=req.body.goal;
  const fundsRaised=0;
- console.log(req.file)
+
+ 
  if (!req.file) {
     throw new  BadRequestError('No File Uploaded');
   }
@@ -88,10 +117,10 @@ const createCampaign=async(req,res)=>{
 const deleteCampaign=async(req,res)=>{
     const {params:{id:campaignId},user:{userId}}=req
     const campaign=await Campaign.findOneAndDelete({
-        _id:campaignId,createdBy:userId
+        _id:campaignId
     })
     if(!campaign){
-        throw new NotFoundError(`No job with id ${campaignId}`)
+        throw new NotFoundError(`No campaign with id ${campaignId}`)
     }
     res.status(StatusCodes.OK).json({campaign})
 }
@@ -126,24 +155,35 @@ const credential=async(req,res)=>{
         CampaignId:req.body.CampaignId
         }
     ) 
-   req.files.forEach((file)=>{
-    if (!file.mimetype.startsWith('image')) {
-        throw new BadRequestError('Please Upload Image');
-      }
-    if(file.size>=100*1024){
-        throw new BadRequestError('Please upload image smaller 100kb');
+   
+   const files = req.files;
+    const images = [];
+
+    for (const file of files) {
+        if (!file.mimetype.startsWith('image')) {
+            throw new BadRequestError('Please Upload Image');
+          }
+        if(file.size>=100*1024){
+            throw new BadRequestError('Please upload image smaller 100kb');
+        }
+      const newImage = new Image({
+        data: file.buffer,
+        contentType: file.mimetype
+      });
+      campaigncredential.document.push(await newImage.save());
     }
-    campaigncredential.document.push({
-        data: fs.readFileSync(path.join(__dirname ,'../'+ `/credentials/${req.body.CampaignId}/` + file.filename)),
-        contentType:file.mimetype
-    })
-   })
    campaigncredential.save()
 
     res.status(StatusCodes.CREATED).json({credential:campaigncredential})  
   
 
 }
+const getCredential=async(req,res)=>{
+    const CampaignId =req.params.id
+    const campaignCredential=await Credential.find({CampaignId:CampaignId})
+    res.status(StatusCodes.OK).json({credential:campaignCredential})  
+  
+}
 module.exports={
-    getAllCampaign,getCampaign,createCampaign,updateCampaign,deleteCampaign,credential
+    getAllCampaign,getCampaign,createCampaign,updateCampaign,deleteCampaign,credential,getPendingCampaign,getCredential
 }

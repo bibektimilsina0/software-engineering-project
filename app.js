@@ -11,13 +11,14 @@ const cors=require('cors')
 const helmet = require('helmet');
 app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: false}))
+
 const connectDb = require('./db/connect')
 app.use(cors())
 app.use(helmet());
 const task_delete=require('./props/autodeleteCampaign')
 const token_delete=require('./props/autodeleteToken')
 app.use('/api/v1/auth',authRoute)
-app.use('/api/v1/campaign',campaignRoute)
+app.use('/api/v1',campaignRoute)
 app.get('/',(req,res)=>{
     res.send('bibektimilsina')
 })

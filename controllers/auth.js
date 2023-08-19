@@ -59,7 +59,7 @@ const register=async(req,res)=>{
             //         message:'verification link sent successfully'
             //     })
           
-       res.status(StatusCodes.CREATED).json({user:{name:user.name},token})  
+       res.status(StatusCodes.CREATED).json({user:{name:user.name,role:user.role},token})  
     } catch (error) {
             
         // user.save({ValidateBeforeSave:false})
@@ -81,7 +81,7 @@ const login=async(req,res)=>{
         throw new UnauthenticatedError('Incorrect password')
     }
     const token=await user.createJWT()
-    res.status(StatusCodes.CREATED).json({user:{name:user.name},token})
+    res.status(StatusCodes.CREATED).json({user:{name:user.name,role:user.role},token})
 }
 const forgotPassword=async(req,res)=>{
    const{email}=req.body;
@@ -169,8 +169,67 @@ const verifyEmail = async (req, res, next) => {
     }
 
 }
+const registeradmin=async(req,res)=>{
+    const {email,password,confirmPassword,role}=req.body
 
+    if(!(password===confirmPassword)){
+     return  res.status(400).json('password and confirmPassword must be same')
+    } 
+    
+       if(!(role==="admin")){
+           throw new BadRequestError("you can not register as user ")
+       }
+    
+    try{
+       const user=await User.create({...req.body})
+       const token=await user.createJWT()
+
+       const verifyToken = await new VerifyToken({
+           userId: user._id,
+           token: crypto.randomBytes(32).toString("hex")
+       }).save()
+       const verificationLink = `${req.protocol}://${req.get('host')}/api/v1/auth/verify/${verifyToken.userId}/${verifyToken.token}`
+       const message = `<!DOCTYPE html>
+       <html>
+       <head>
+         <title>Verify Your Email Address - Crowd Funding Services</title>
+       </head>
+       <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+         <h2>Verify Your Email Address - Crowd Funding Services</h2>
+         <p>Dear ${user.name},</p>
+         <p>Thank you for joining Crowd Funding Services! We are thrilled to have you as a part of our community. Before we get started, we need to verify your email address to ensure the security of your account.</p>
+         <p>To complete the verification process, simply click on the link below:</p>
+         <p><a href="${verificationLink}">Verify Your Email Address</a></p>
+         <p>If the link above does not work, you can copy and paste the following URL into your browser:</p>
+         <p>${verificationLink}</p>
+         <p>Please note that this link will expire after [time period], so make sure to verify your email address as soon as possible.</p>
+         <p>By verifying your email, you'll gain full access to our platform and receive updates on exciting crowdfunding opportunities tailored to your interests.</p>
+         <p>If you did not sign up for an account with Crowd Funding Services, or if you have any questions or concerns, please contact our support team at [support email or phone number].</p>
+         <p>Thank you for choosing Crowd Funding Services. We look forward to helping you bring your dreams to life!</p>
+         <b><p>Best regards,<br>The Crowd Funding Services Team</p></b>
+       </body>
+       </html>`
+      const result= await  sendEmail({
+               email:user.email,
+               message:message,
+               subject:'Email Verification'
+              }) 
+       console.log(result)
+          
+           //     res.status(200).json({
+           //         status:'success',
+           //         message:'verification link sent successfully'
+           //     })
+         
+      res.status(StatusCodes.CREATED).json({user:{name:user.name,role:user.role},token})  
+   } catch (error) {
+           
+       // user.save({ValidateBeforeSave:false})
+       return new NotFoundError('There was a error sending password reset email.');
+     }
+   
+}
 
 module.exports={
-    register,login,forgotPassword,resetPassword,verifyEmail
+    register,login,forgotPassword,resetPassword,verifyEmail,registeradmin
 }
