@@ -20,7 +20,7 @@ const CredentialSchema=new mongoose.Schema({
         },
         documentType:{
             type:String,
-            enum:["Birth Certificate","Citizenship","Driving License"]
+            enum:["Birth Certificate","Citizenship","Driving License","Others"]
         },
         document:[{
             data: Buffer,

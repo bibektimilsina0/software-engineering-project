@@ -5,6 +5,7 @@ const app=express()
 const bodyParser=require('body-parser')
 const authRoute=require('./routes/auth')
 const campaignRoute=require('./routes/campaign')
+const paypal=require('./routes/payment')
 const notFoundMiddleware = require('./middleware/not-found');
 const errorHandlerMiddleware = require('./middleware/error-handler');
 const cors=require('cors')
@@ -19,6 +20,7 @@ const task_delete=require('./props/autodeleteCampaign')
 const token_delete=require('./props/autodeleteToken')
 app.use('/api/v1/auth',authRoute)
 app.use('/api/v1',campaignRoute)
+app.use('/api/v1/payment',paypal)
 app.get('/',(req,res)=>{
     res.send('bibektimilsina')
 })
