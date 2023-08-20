@@ -64,8 +64,7 @@ const getPendingCampaign=async(req,res)=>{
     const filteredCampaign = await Promise.all(result.map(async campaign => {
         // const base64String = campaign.img.data.toString('base64');
         return {
-          ...campaign.toObject(), // Include all existing properties
-          img: "I have not display image ", // Modify the img property
+          ...campaign.toObject(), 
         };
       }));
     res.status(StatusCodes.OK).json({filteredCampaign,count:filteredCampaign.length})
