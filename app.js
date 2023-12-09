@@ -2,6 +2,7 @@ require('dotenv').config()
 require('express-async-errors');
 const express=require('express')
 const app=express()
+const {readFile} = require('fs')
 const bodyParser=require('body-parser')
 const authRoute=require('./routes/auth')
 const campaignRoute=require('./routes/campaign')
@@ -24,6 +25,14 @@ app.use('/api/v1/payment',paypal)
 app.get('/',(req,res)=>{
     res.send('bibektimilsina')
 })
+
+app.get('/api/safar-api',(req,res)=>{
+    const file =readFile('./foranotherproject/place.json','utf8',(err,data)=>{
+       res.status(200).send(data)
+       res.end()
+    })
+ 
+ })
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 const port=process.env.PORT||3000;
